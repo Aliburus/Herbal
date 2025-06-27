@@ -1,6 +1,19 @@
 # 🌿 Dijital Lokman Hekim
 
-Bitkisel tedavi yöntemlerini dijital ortama taşıyan modern web uygulaması. Kullanıcılar, belirli hastalıklara hangi bitkilerin iyi geldiğini ve bitkilerin hangi hastalıklarda kullanıldığını arayabilir. Sistem, reçeteler ve önerilerle bu bilgileri destekler.
+Bitkisel tedavi yöntemlerini dijital ortama taşıyan, modern ve tam entegre bir web uygulaması. Kullanıcılar, hastalıklara iyi gelen bitkileri ve bitkilerin hangi hastalıklarda kullanıldığını arayabilir. Admin paneli ile tüm içerik ve ilişkiler kolayca yönetilir. **Tüm arayüz ve yönetim paneli Türkçe'dir.**
+
+## 🚀 Öne Çıkan Özellikler
+
+- **Modern, responsive ve kullanıcı dostu admin paneli** (sidebar, dashboard, grid)
+- **Dosya upload ve görsel yönetimi** (bitki fotoğrafları, sürükle-bırak, önizleme)
+- **Bitki, hastalık, reçete için tam CRUD** (ekle, düzenle, sil)
+- **Bitki-hastalık ve reçete-hastalık ilişkileri** (çoklu seçim, ilişkiler sayfası)
+- **Gerçek zamanlı istatistikler** (dashboard'da canlı API verisi)
+- **Tıklanabilir ve şık "Son Eklenenler" kutuları**
+- **Arama ve filtreleme** (yazarken filtreleme, hızlı erişim)
+- **JWT tabanlı admin authentication**
+- **Gizlilik ve Kullanım Şartları sayfaları**
+- **Tamamen Türkçe arayüz ve yönetim**
 
 ## 🎯 Özellikler
 
@@ -20,124 +33,105 @@ Bitkisel tedavi yöntemlerini dijital ortama taşıyan modern web uygulaması. K
 - **İlişki Yönetimi**: Bitki ↔ Hastalık ilişkileri
 - **Güvenli Giriş**: JWT tabanlı authentication
 
-## 🛠️ Teknoloji Stack
+## 🛠️ Teknolojiler
 
-### Frontend
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, React Router
+- **Backend:** Node.js, Express, MongoDB, Mongoose, JWT, Multer
 
-- **React.js** - Modern UI framework
-- **TypeScript** - Tip güvenliği
-- **Vite** - Hızlı build tool
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Router** - Sayfa yönlendirme
-
-### Backend
-
-- **Node.js** - JavaScript runtime
-- **Express.js** - Web framework
-- **MongoDB** - NoSQL veritabanı
-- **Mongoose** - MongoDB ODM
-- **JWT** - Authentication
-- **Multer** - Dosya yükleme
-
-## 📦 Kurulum
-
-### Gereksinimler
-
-- Node.js (v16 veya üzeri)
-- MongoDB
-- npm veya yarn
-
-### Backend Kurulumu
+## 📦 Kurulum & Çalıştırma
 
 ```bash
+# Backend
 cd backend
 npm install
-```
+npm start
 
-### Frontend Kurulumu
-
-```bash
+# Frontend
 cd frontend
 npm install
+npm run dev
 ```
 
-### Environment Variables
+- Backend: `http://localhost:5000`
+- Frontend: `http://localhost:5173`
 
-Backend klasöründe `.env` dosyası oluşturun:
+## 📁 .env Örneği (backend)
 
-```env
+```
 MONGODB_URI=mongodb://localhost:27017/herbal
 JWT_SECRET=your_jwt_secret_key
 PORT=5000
 ```
 
-## 🚀 Çalıştırma
+## 📊 Veritabanı Şeması (Güncel)
 
-### Backend
+### Bitki (Plant)
 
-```bash
-cd backend
-npm start
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Uygulama `http://localhost:5173` adresinde çalışacaktır.
-
-## 📊 Veritabanı Yapısı
-
-### Koleksiyonlar
-
-#### Plants (Bitkiler)
-
-```javascript
+```js
 {
   name: String,
   description: String,
   usage: String,
-  group: String,
-  image: String,
-  diseases: [String]
+  image: String, // sadece dosya adı
 }
 ```
 
-#### Diseases (Hastalıklar)
+### Hastalık (Disease)
 
-```javascript
+```js
 {
   name: String,
   description: String,
-  category: String,
-  relatedPlants: [String],
-  relatedRecipes: [String]
 }
 ```
 
-#### Recipes (Reçeteler)
+### Reçete (Recipe)
 
-```javascript
+```js
 {
   title: String,
   content: String,
   usage: String,
-  diseases: [String]
 }
 ```
 
-#### AdminUsers (Admin Kullanıcılar)
+### İlişkiler (Relation)
 
-```javascript
-{
-  email: String,
-  password: String,
-  role: String
-}
-```
+- **PlantDiseaseRelation:** plant_id, disease_id
+- **RecipeDiseaseRelation:** recipe_id, disease_id
+
+## 🔗 API Endpointleri (Özet)
+
+- `/api/plants` (GET, POST, PUT, DELETE)
+- `/api/diseases` (GET, POST, PUT, DELETE)
+- `/api/recipes` (GET, POST, PUT, DELETE)
+- `/api/relations` (ilişki yönetimi)
+- `/api/upload/image` (dosya yükleme)
+- `/api/auth/login` (giriş)
+
+## 👨‍⚕️ Admin Paneli
+
+- **Dashboard:** Son eklenenler, istatistikler, hızlı erişim
+- **Bitki/Hastalık/Reçete Yönetimi:** CRUD, arama, görsel
+- **İlişki Yönetimi:** Accordion/expandable, çoklu seçim
+- **Responsive:** Mobil ve masaüstü uyumlu
+- **Tüm içerik gerçek API ile senkronize**
+
+## 🎨 Kullanıcı Arayüzü
+
+- **Bitkiler, hastalıklar, reçeteler**: Liste, detay, arama
+- **Tıklanabilir kartlar ve kutular**
+- **Görsel ve işlevsel olarak optimize**
+
+## 📝 Notlar
+
+- `TODO.md` dosyası repoya dahil edilmez.
+- Tüm görseller `/uploads/` klasöründe saklanır.
+- Kayıtlı görseller sadece dosya adı olarak tutulur.
+
+---
+
+Her türlü katkı ve geri bildirim için PR ve issue açabilirsiniz!
 
 ## 🔐 API Endpoints
 

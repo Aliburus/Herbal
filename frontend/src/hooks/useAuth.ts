@@ -41,5 +41,6 @@ export const useAuth = () => {
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
+    isUser: user?.role === "user",
   };
 };

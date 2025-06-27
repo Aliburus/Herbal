@@ -49,7 +49,8 @@ exports.getDiseaseById = async (req, res) => {
     res.json({
       ...disease.toObject(),
       id: disease._id,
-      plants,
+      plants: plants,
+      plantIds: plantIds,
       recipes,
     });
   } catch (err) {
@@ -59,8 +60,19 @@ exports.getDiseaseById = async (req, res) => {
 
 exports.createDisease = async (req, res) => {
   try {
-    const disease = new Disease(req.body);
+    const { plantIds, ...diseaseData } = req.body;
+    const disease = new Disease(diseaseData);
     await disease.save();
+
+    // İlişkili bitkileri kaydet
+    if (plantIds && Array.isArray(plantIds)) {
+      const relations = plantIds.map((plantId) => ({
+        plant_id: plantId,
+        disease_id: disease._id,
+      }));
+      await PlantDiseaseRelation.insertMany(relations);
+    }
+
     res.status(201).json(disease);
   } catch (err) {
     res
@@ -71,10 +83,28 @@ exports.createDisease = async (req, res) => {
 
 exports.updateDisease = async (req, res) => {
   try {
-    const disease = await Disease.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const { plantIds, ...diseaseData } = req.body;
+    const disease = await Disease.findByIdAndUpdate(
+      req.params.id,
+      diseaseData,
+      {
+        new: true,
+      }
+    );
     if (!disease) return res.status(404).json({ error: "Hastalık bulunamadı" });
+
+    // Mevcut ilişkileri sil
+    await PlantDiseaseRelation.deleteMany({ disease_id: disease._id });
+
+    // Yeni ilişkileri kaydet
+    if (plantIds && Array.isArray(plantIds)) {
+      const relations = plantIds.map((plantId) => ({
+        plant_id: plantId,
+        disease_id: disease._id,
+      }));
+      await PlantDiseaseRelation.insertMany(relations);
+    }
+
     res.json(disease);
   } catch (err) {
     res
@@ -85,6 +115,9 @@ exports.updateDisease = async (req, res) => {
 
 exports.deleteDisease = async (req, res) => {
   try {
+    // Önce ilişkili kayıtları sil
+    await PlantDiseaseRelation.deleteMany({ disease_id: req.params.id });
+
     const disease = await Disease.findByIdAndDelete(req.params.id);
     if (!disease) return res.status(404).json({ error: "Hastalık bulunamadı" });
     res.json({ message: "Hastalık silindi" });

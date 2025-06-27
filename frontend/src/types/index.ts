@@ -13,8 +13,8 @@ export interface Disease {
   id: string;
   name: string;
   description: string;
-  category: string | Category;
   plants?: string[] | Plant[];
+  plantIds?: string[];
   recipes?: string[] | Recipe[];
   relatedPlantCount?: number;
 }
@@ -24,15 +24,9 @@ export interface Recipe {
   title: string;
   content: string;
   usage: string;
-  diseases: string[];
-  ingredients: string[];
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  type: "main" | "sub";
-  parent_id?: string;
+  diseases?: string[] | Disease[];
+  diseaseIds?: string[];
+  diseaseCount?: number;
 }
 
 export interface SearchResult {
@@ -43,6 +37,7 @@ export interface SearchResult {
 
 export interface AdminUser {
   id: string;
+  name: string;
   email: string;
   role: "admin" | "user";
 }

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Edit, Trash2, Leaf, Search, Filter } from "lucide-react";
+import { Edit, Trash2, BookOpen, Plus } from "lucide-react";
 import { SearchBar } from "../../components/Common/SearchBar";
-import { getPlants, deletePlant } from "../../services/plantService";
-import { Plant } from "../../types";
+import { getRecipes, deleteRecipe } from "../../services/recipeService";
+import { Recipe } from "../../types";
 import { LoadingSpinner } from "../../components/Common/LoadingSpinner";
 
-export const AdminPlants: React.FC = () => {
-  const [plants, setPlants] = useState<Plant[]>([]);
+export const AdminRecipes: React.FC = () => {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -15,24 +15,25 @@ export const AdminPlants: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    getPlants()
-      .then((res) => setPlants(res.data.slice().reverse()))
-      .catch(() => setError("Bitkiler yüklenemedi"))
+    getRecipes()
+      .then((res) => setRecipes(res.data.slice().reverse()))
+      .catch(() => setError("Reçeteler yüklenemedi"))
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredPlants = plants.filter(
-    (plant) =>
-      plant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      plant.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRecipes = recipes.filter(
+    (recipe) =>
+      recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      recipe.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Bu bitkiyi silmek istediğinize emin misiniz?")) return;
+    if (!window.confirm("Bu reçeteyi silmek istediğinize emin misiniz?"))
+      return;
     setDeleting(id);
     try {
-      await deletePlant(id);
-      setPlants((prev) => prev.filter((p) => p.id !== id));
+      await deleteRecipe(id);
+      setRecipes((prev) => prev.filter((r) => r.id !== id));
     } catch {
       alert("Silme işlemi başarısız oldu.");
     } finally {
@@ -60,34 +61,34 @@ export const AdminPlants: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center space-x-2">
-            <Leaf className="h-7 w-7 text-primary-600" />
-            <span>Bitki Yönetimi</span>
+            <BookOpen className="h-7 w-7 text-earth-600" />
+            <span>Reçete Yönetimi</span>
           </h1>
           <Link
-            to="/admin/plants/new"
-            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            to="/admin/recipes/new"
+            className="inline-flex items-center px-4 py-2 bg-earth-600 text-white rounded-lg hover:bg-earth-700 transition-colors"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Bitki Ekle
+            Reçete Ekle
           </Link>
         </div>
         <div className="mb-6 flex items-center space-x-4">
           <SearchBar
-            placeholder="Bitki adı veya açıklaması ara..."
+            placeholder="Reçete başlığı veya içeriği ara..."
             onSearch={setSearchQuery}
             className="w-full max-w-md"
           />
         </div>
-        {filteredPlants.length > 0 ? (
+        {filteredRecipes.length > 0 ? (
           <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full table-fixed divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                    Adı
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider w-1/4 max-w-xs">
+                    Başlık
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                    Açıklama
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider w-1/2 max-w-md">
+                    İçerik
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                     İşlemler
@@ -95,35 +96,34 @@ export const AdminPlants: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPlants.map((plant) => (
+                {filteredRecipes.map((recipe) => (
                   <tr
-                    key={plant.id}
+                    key={recipe.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                      {plant.name}
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900 truncate max-w-xs">
+                      {recipe.title}
                     </td>
                     <td
-                      className="px-6 py-4 max-w-xs whitespace-nowrap text-gray-700 overflow-hidden text-ellipsis"
-                      title={plant.description}
-                      style={{ maxWidth: "320px" }}
+                      className="px-6 py-4 whitespace-nowrap text-gray-700 truncate max-w-md"
+                      title={recipe.content}
                     >
-                      {plant.description.length > 80
-                        ? plant.description.slice(0, 80) + "..."
-                        : plant.description}
+                      {recipe.content.length > 80
+                        ? recipe.content.slice(0, 80) + "..."
+                        : recipe.content}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
                         <Link
-                          to={`/admin/plants/edit/${plant.id}`}
-                          className="text-primary-600 hover:text-primary-800"
+                          to={`/admin/recipes/edit/${recipe.id}`}
+                          className="text-earth-600 hover:text-earth-800"
                         >
                           <Edit className="h-5 w-5" />
                         </Link>
                         <button
                           className="text-red-600 hover:text-red-800"
-                          onClick={() => handleDelete(plant.id)}
-                          disabled={deleting === plant.id}
+                          onClick={() => handleDelete(recipe.id)}
+                          disabled={deleting === recipe.id}
                         >
                           <Trash2 className="h-5 w-5" />
                         </button>
@@ -137,7 +137,7 @@ export const AdminPlants: React.FC = () => {
         ) : (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Bitki bulunamadı
+              Reçete bulunamadı
             </h3>
             <p className="text-gray-500">
               Arama kriterlerinizi değiştirerek tekrar deneyin.

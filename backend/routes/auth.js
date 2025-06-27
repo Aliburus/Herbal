@@ -5,6 +5,49 @@ const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
+// Kullanıcı kayıt
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Email kontrolü
+    const existingUser = await AdminUser.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        error: "Kayıt başarısız",
+        message: "Bu email adresi zaten kullanılıyor",
+      });
+    }
+
+    // Yeni kullanıcı oluştur
+    const user = new AdminUser({
+      name,
+      email,
+      password,
+      role: "user", // Normal kullanıcı rolü
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Kayıt başarılı",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    res.status(500).json({
+      error: "Sunucu hatası",
+      message: "Kayıt işlemi başarısız",
+    });
+  }
+});
+
 // Admin giriş
 router.post("/login", async (req, res) => {
   try {
@@ -50,6 +93,7 @@ router.post("/login", async (req, res) => {
       message: "Giriş başarılı",
       user: {
         id: user._id,
+        name: user.name,
         email: user.email,
         role: user.role,
       },
@@ -119,6 +163,33 @@ router.post("/setup", async (req, res) => {
       error: "Sunucu hatası",
       message: "Admin hesabı oluşturulamadı",
     });
+  }
+});
+
+// Kullanıcı listesi (sadece admin)
+router.get("/users", authMiddleware, async (req, res) => {
+  try {
+    // Sadece admin erişimi
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Erişim reddedildi" });
+    }
+    const users = await AdminUser.find({}, "_id name email role createdAt");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: "Kullanıcılar alınamadı" });
+  }
+});
+
+// Kullanıcı sayısı (sadece admin)
+router.get("/users/stats", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Erişim reddedildi" });
+    }
+    const userCount = await AdminUser.countDocuments();
+    res.json({ userCount });
+  } catch (error) {
+    res.status(500).json({ error: "Kullanıcı sayısı alınamadı" });
   }
 });
 

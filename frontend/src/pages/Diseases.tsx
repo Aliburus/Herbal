@@ -63,11 +63,6 @@ export const Diseases: React.FC = () => {
                 key={disease.id}
                 title={disease.name}
                 description={disease.description}
-                badge={
-                  typeof disease.category === "string"
-                    ? disease.category
-                    : disease.category?.name
-                }
                 onClick={() => navigate(`/diseases/${disease.id}`)}
               >
                 <div className="flex items-center justify-between text-sm text-gray-500">

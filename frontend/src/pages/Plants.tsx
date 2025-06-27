@@ -56,16 +56,10 @@ export const Plants: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-primary-100 rounded-lg">
-              <Leaf className="h-6 w-6 text-primary-600" />
-            </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Tıbbi Bitkiler
               </h1>
-              <p className="text-gray-600">
-                Doğanın şifa kaynağı bitkileri keşfedin
-              </p>
             </div>
           </div>
 

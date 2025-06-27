@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Leaf,
-  Search,
-  BookOpen,
-  Users,
-  ArrowRight,
-  Star,
-  Shield,
-  Heart,
-} from "lucide-react";
-import { SearchBar } from "../components/Common/SearchBar";
+import { Leaf, Search, BookOpen, ArrowRight, Shield } from "lucide-react";
+
 import { getStats } from "../services/plantService";
 
 export const Home: React.FC = () => {
@@ -22,12 +13,6 @@ export const Home: React.FC = () => {
   useEffect(() => {
     getStats().then((res) => setStats(res.data));
   }, []);
-
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(query)}`;
-    }
-  };
 
   const features = [
     {
@@ -61,7 +46,7 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-20">
+      <section className="relative bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <div className="flex justify-center mb-6">
@@ -81,15 +66,6 @@ export const Home: React.FC = () => {
               çözümlerine ulaşın.
             </p>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <SearchBar
-                placeholder="Hastalık, bitki veya reçete arayın..."
-                onSearch={handleSearch}
-                className="shadow-lg"
-              />
-            </div>
-
             {/* Quick Actions */}
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -105,13 +81,6 @@ export const Home: React.FC = () => {
               >
                 <Search className="h-5 w-5 text-secondary-600" />
                 <span>Hastalıklar</span>
-              </Link>
-              <Link
-                to="/recipes"
-                className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-full border border-gray-200 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center space-x-2"
-              >
-                <BookOpen className="h-5 w-5 text-earth-600" />
-                <span>Reçeteler</span>
               </Link>
             </div>
           </div>

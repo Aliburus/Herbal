@@ -76,8 +76,19 @@ exports.getPlantById = async (req, res) => {
 
 exports.createPlant = async (req, res) => {
   try {
-    const plant = new Plant(req.body);
+    const { diseaseIds, ...plantData } = req.body;
+    const plant = new Plant(plantData);
     await plant.save();
+
+    // İlişkili hastalıkları kaydet
+    if (diseaseIds && Array.isArray(diseaseIds)) {
+      const relations = diseaseIds.map((diseaseId) => ({
+        plant_id: plant._id,
+        disease_id: diseaseId,
+      }));
+      await PlantDiseaseRelation.insertMany(relations);
+    }
+
     res.status(201).json(plant);
   } catch (err) {
     res
@@ -88,10 +99,24 @@ exports.createPlant = async (req, res) => {
 
 exports.updatePlant = async (req, res) => {
   try {
-    const plant = await Plant.findByIdAndUpdate(req.params.id, req.body, {
+    const { diseaseIds, ...plantData } = req.body;
+    const plant = await Plant.findByIdAndUpdate(req.params.id, plantData, {
       new: true,
     });
     if (!plant) return res.status(404).json({ error: "Bitki bulunamadı" });
+
+    // Mevcut ilişkileri sil
+    await PlantDiseaseRelation.deleteMany({ plant_id: plant._id });
+
+    // Yeni ilişkileri kaydet
+    if (diseaseIds && Array.isArray(diseaseIds)) {
+      const relations = diseaseIds.map((diseaseId) => ({
+        plant_id: plant._id,
+        disease_id: diseaseId,
+      }));
+      await PlantDiseaseRelation.insertMany(relations);
+    }
+
     res.json(plant);
   } catch (err) {
     res
@@ -102,6 +127,9 @@ exports.updatePlant = async (req, res) => {
 
 exports.deletePlant = async (req, res) => {
   try {
+    // Önce ilişkili kayıtları sil
+    await PlantDiseaseRelation.deleteMany({ plant_id: req.params.id });
+
     const plant = await Plant.findByIdAndDelete(req.params.id);
     if (!plant) return res.status(404).json({ error: "Bitki bulunamadı" });
     res.json({ message: "Bitki silindi" });

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Leaf,
@@ -8,43 +8,64 @@ import {
   TrendingUp,
   Plus,
 } from "lucide-react";
-// Geçici mock veri (hata almamak için)
-const plants: any[] = [];
-const diseases: any[] = [];
-const recipes: any[] = [];
+import { getStats as getPlantStats } from "../../services/plantService";
+import { getUserStats } from "../../services/authService";
+import { getPlants } from "../../services/plantService";
+import { getDiseases } from "../../services/diseaseService";
+import { getRecipes } from "../../services/recipeService";
 
 export const AdminDashboard: React.FC = () => {
-  const stats = [
+  const [stats, setStats] = useState({
+    plantCount: 0,
+    diseaseCount: 0,
+    recipeCount: 0,
+    userCount: 0,
+  });
+  const [recentPlants, setRecentPlants] = useState<any[]>([]);
+  const [recentDiseases, setRecentDiseases] = useState<any[]>([]);
+  const [recentRecipes, setRecentRecipes] = useState<any[]>([]);
+
+  useEffect(() => {
+    getPlantStats().then((res) => {
+      setStats((prev) => ({ ...prev, ...res.data }));
+    });
+    getUserStats().then((res) => {
+      setStats((prev) => ({ ...prev, userCount: res.data.userCount }));
+    });
+    getPlants().then((res) => setRecentPlants(res.data.slice(-5).reverse()));
+    getDiseases().then((res) =>
+      setRecentDiseases(res.data.slice(-5).reverse())
+    );
+    getRecipes().then((res) => setRecentRecipes(res.data.slice(-5).reverse()));
+  }, []);
+
+  const statCards = [
     {
       title: "Toplam Bitki",
-      value: plants.length,
+      value: stats.plantCount,
       icon: Leaf,
-      color: "bg-primary-500",
-      change: "+12%",
+      color: "bg-emerald-500",
       link: "/admin/plants",
     },
     {
       title: "Hastalık Bilgisi",
-      value: diseases.length,
+      value: stats.diseaseCount,
       icon: Activity,
-      color: "bg-secondary-500",
-      change: "+8%",
+      color: "bg-rose-500",
       link: "/admin/diseases",
     },
     {
       title: "Doğal Reçete",
-      value: recipes.length,
+      value: stats.recipeCount,
       icon: BookOpen,
-      color: "bg-earth-500",
-      change: "+15%",
+      color: "bg-amber-500",
       link: "/admin/recipes",
     },
     {
-      title: "Aktif Kullanıcı",
-      value: "10.2K",
+      title: "Kullanıcı",
+      value: stats.userCount,
       icon: Users,
-      color: "bg-green-500",
-      change: "+23%",
+      color: "bg-blue-500",
       link: "/admin/users",
     },
   ];
@@ -55,42 +76,51 @@ export const AdminDashboard: React.FC = () => {
       description: "Sisteme yeni tıbbi bitki bilgisi ekleyin",
       icon: Leaf,
       link: "/admin/plants/new",
-      color: "text-primary-600 bg-primary-100",
+      color: "text-emerald-600 bg-emerald-50 hover:bg-emerald-100",
     },
     {
       title: "Hastalık Tanımla",
       description: "Yeni hastalık bilgisi ve kategorisi oluşturun",
       icon: Activity,
       link: "/admin/diseases/new",
-      color: "text-secondary-600 bg-secondary-100",
+      color: "text-rose-600 bg-rose-50 hover:bg-rose-100",
     },
     {
       title: "Reçete Oluştur",
       description: "Doğal tedavi reçetesi hazırlayın",
       icon: BookOpen,
       link: "/admin/recipes/new",
-      color: "text-earth-600 bg-earth-100",
+      color: "text-amber-600 bg-amber-50 hover:bg-amber-100",
     },
   ];
 
   const recentActivity = [
-    { action: "Nane bitkisi güncellendi", time: "2 saat önce", user: "Admin" },
     {
+      id: 1,
+      action: "Nane bitkisi güncellendi",
+      time: "2 saat önce",
+      user: "Admin",
+    },
+    {
+      id: 2,
       action: "Yeni reçete eklendi: Ihlamur Çayı",
       time: "4 saat önce",
       user: "Admin",
     },
     {
+      id: 3,
       action: "Soğuk algınlığı hastalığı düzenlendi",
       time: "1 gün önce",
       user: "Admin",
     },
     {
+      id: 4,
       action: "Kuşburnu bitkisi sisteme eklendi",
       time: "2 gün önce",
       user: "Admin",
     },
     {
+      id: 5,
       action: "Sindirim karışımı reçetesi oluşturuldu",
       time: "3 gün önce",
       user: "Admin",
@@ -98,7 +128,7 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full overflow-x-hidden min-h-screen">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Yönetim Paneli</h1>
@@ -107,84 +137,173 @@ export const AdminDashboard: React.FC = () => {
         </p>
       </div>
 
+      {/* Son Eklenenler */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Bitkiler */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Son Eklenen Bitkiler
+          </h2>
+          <ul className="space-y-2">
+            {recentPlants.map((plant) => (
+              <li key={plant.id}>
+                <Link
+                  to={`/plants/${plant.id}`}
+                  className="block px-2 py-1 rounded hover:bg-primary-50 transition group"
+                >
+                  <span className="font-medium text-primary-700 group-hover:underline">
+                    {plant.name}
+                  </span>
+                  <span className="text-gray-600">
+                    {" "}
+                    — {plant.description?.slice(0, 40)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {recentPlants.length === 0 && (
+              <li className="text-gray-400">Kayıt yok</li>
+            )}
+          </ul>
+        </div>
+        {/* Hastalıklar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Son Eklenen Hastalıklar
+          </h2>
+          <ul className="space-y-2">
+            {recentDiseases.map((disease) => (
+              <li key={disease.id}>
+                <Link
+                  to={`/diseases/${disease.id}`}
+                  className="block px-2 py-1 rounded hover:bg-secondary-50 transition group"
+                >
+                  <span className="font-medium text-secondary-700 group-hover:underline">
+                    {disease.name}
+                  </span>
+                  <span className="text-gray-600">
+                    {" "}
+                    — {disease.description?.slice(0, 40)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {recentDiseases.length === 0 && (
+              <li className="text-gray-400">Kayıt yok</li>
+            )}
+          </ul>
+        </div>
+        {/* Reçeteler */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Son Eklenen Reçeteler
+          </h2>
+          <ul className="space-y-2">
+            {recentRecipes.map((recipe) => (
+              <li key={recipe.id}>
+                <Link
+                  to={`/admin/recipes/edit/${recipe.id}`}
+                  className="block px-2 py-1 rounded hover:bg-amber-50 transition group"
+                >
+                  <span className="font-medium text-amber-700 group-hover:underline">
+                    {recipe.title}
+                  </span>
+                  <span className="text-gray-600">
+                    {" "}
+                    — {recipe.content?.slice(0, 40)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {recentRecipes.length === 0 && (
+              <li className="text-gray-400">Kayıt yok</li>
+            )}
+          </ul>
+        </div>
+      </div>
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Link
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-[calc(100vw-256px)] overflow-x-hidden">
+        {statCards.map((stat, index) => (
+          <div
             key={index}
-            to={stat.link}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow group"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-1">
                   {stat.title}
                 </p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stat.value}
+                <p className="text-3xl font-bold text-gray-900">
+                  {stat.value.toLocaleString()}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="h-6 w-6 text-white" />
+              <div className={`p-3 rounded-xl ${stat.color} shadow-sm`}>
+                <stat.icon className="h-7 w-7 text-white" />
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-green-600 text-sm font-medium">
-                {stat.change}
-              </span>
-              <span className="text-gray-400 text-sm group-hover:text-primary-600 transition-colors">
-                Görüntüle →
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                Detayları görüntüle →
               </span>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">
           Hızlı İşlemler
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action, index) => (
-            <Link
+            <div
               key={index}
-              to={action.link}
-              className="p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all group"
+              className={`p-6 border-2 border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 group cursor-pointer ${
+                action.color.split(" ")[2]
+              }`}
             >
-              <div className={`p-2 rounded-lg ${action.color} w-fit mb-3`}>
-                <action.icon className="h-5 w-5" />
+              <div
+                className={`p-3 rounded-xl ${action.color.split(" ")[0]} ${
+                  action.color.split(" ")[1]
+                } w-fit mb-4 group-hover:scale-110 transition-transform duration-200`}
+              >
+                <action.icon className="h-6 w-6" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-primary-700">
+              <h3 className="font-semibold text-gray-900 mb-2 text-lg">
                 {action.title}
               </h3>
-              <p className="text-sm text-gray-600">{action.description}</p>
-            </Link>
+              <p className="text-gray-600 leading-relaxed">
+                {action.description}
+              </p>
+            </div>
           ))}
         </div>
       </div>
 
       {/* Recent Activity & Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
             Son Aktiviteler
           </h2>
           <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-primary-600 rounded-full mt-2"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{activity.action}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-gray-500">
-                      {activity.time}
-                    </span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-500">
-                      {activity.user}
-                    </span>
+            {recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 mb-1">
+                    {activity.action}
+                  </p>
+                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <span>{activity.time}</span>
+                    <span>•</span>
+                    <span>{activity.user}</span>
                   </div>
                 </div>
               </div>
@@ -194,13 +313,16 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Usage Chart Placeholder */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
             Kullanım İstatistikleri
           </h2>
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div className="h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200">
             <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Grafik yakında eklenecek</p>
+              <div className="bg-white p-4 rounded-full shadow-sm mb-4 mx-auto w-fit">
+                <TrendingUp className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 font-medium">İstatistik Grafiği</p>
+              <p className="text-sm text-gray-400 mt-1">Yakında eklenecek</p>
             </div>
           </div>
         </div>

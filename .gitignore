@@ -11,6 +11,8 @@ dist/
 dist-ssr/
 build/
 
+uploads/
+
 
 # Environment variables
 .env
@@ -108,3 +110,6 @@ Thumbs.db
 
 # Local development
 *.local
+
+# TODO.md
+TODO.md

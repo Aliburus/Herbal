@@ -1,43 +1,49 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { LoadingSpinner } from '../components/Common/LoadingSpinner';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Leaf, Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import { LoadingSpinner } from "../components/Common/LoadingSpinner";
+import { getMe } from "../services/authService";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const success = await login(formData.email, formData.password);
       if (success) {
-        navigate('/admin');
+        const currentUser = await getMe();
+        if (currentUser.data.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       } else {
-        setError('Email veya şifre hatalı. Lütfen tekrar deneyin.');
+        setError("Email veya şifre hatalı. Lütfen tekrar deneyin.");
       }
     } catch (err) {
-      setError('Giriş yapılırken bir hata oluştu.');
+      setError("Giriş yapılırken bir hata oluştu.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -51,8 +57,8 @@ export const Login: React.FC = () => {
               <Leaf className="h-8 w-8 text-primary-600" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Girişi</h1>
-          <p className="text-gray-600">Dijital Lokman yönetim paneline erişim</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Giriş Yap</h1>
+          <p className="text-gray-600">Dijital Lokman hesabınıza erişim</p>
         </div>
 
         {/* Login Form */}
@@ -70,7 +76,10 @@ export const Login: React.FC = () => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Adresi
               </label>
               <div className="relative">
@@ -92,7 +101,10 @@ export const Login: React.FC = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Şifre
               </label>
               <div className="relative">
@@ -100,7 +112,7 @@ export const Login: React.FC = () => {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={formData.password}
@@ -140,20 +152,24 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">Demo Hesap Bilgileri:</h3>
-            <div className="text-sm text-blue-700 space-y-1">
-              <p><strong>Email:</strong> admin@lokmanhekim.com</p>
-              <p><strong>Şifre:</strong> admin123</p>
-            </div>
+          {/* Register Link */}
+          <div className="text-center mt-6">
+            <p className="text-gray-600 text-sm">
+              Hesabınız yok mu?{" "}
+              <Link
+                to="/register"
+                className="text-primary-600 hover:text-primary-700 font-medium transition-colors"
+              >
+                Hesap oluşturun
+              </Link>
+            </p>
           </div>
         </div>
 
         {/* Back to Home */}
         <div className="text-center mt-6">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-gray-600 hover:text-primary-600 text-sm transition-colors"
           >
             ← Ana sayfaya dön
