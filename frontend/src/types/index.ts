@@ -40,4 +40,5 @@ export interface AdminUser {
   name: string;
   email: string;
   role: "admin" | "user";
+  createdAt?: string;
 }

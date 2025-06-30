@@ -21,6 +21,21 @@ uploads/
 .env.test.local
 .env.production.local
 
+
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/uploads/
+
+# Common
+
 # Logs
 logs
 *.log

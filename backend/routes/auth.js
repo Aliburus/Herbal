@@ -1,7 +1,10 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { AdminUser } = require("../models");
+const { AdminUser, Disease } = require("../models");
 const authMiddleware = require("../middleware/auth");
+const Fuse = require("fuse.js");
+const axios = require("axios");
+require("dotenv").config();
 
 const router = express.Router();
 
@@ -190,6 +193,179 @@ router.get("/users/stats", authMiddleware, async (req, res) => {
     res.json({ userCount });
   } catch (error) {
     res.status(500).json({ error: "Kullanıcı sayısı alınamadı" });
+  }
+});
+
+// Kullanıcı silme (sadece admin)
+router.delete("/users/:id", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Erişim reddedildi" });
+    }
+
+    const userId = req.params.id;
+
+    // Kendini silmeye çalışıyorsa engelle
+    if (userId === req.user._id.toString()) {
+      return res.status(400).json({
+        error: "İşlem reddedildi",
+        message: "Kendi hesabınızı silemezsiniz",
+      });
+    }
+
+    const user = await AdminUser.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+    }
+
+    await AdminUser.findByIdAndDelete(userId);
+    res.json({ success: true, message: "Kullanıcı başarıyla silindi" });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Kullanıcı silinemedi" });
+  }
+});
+
+// Şifre ve e-posta değiştirme (sadece giriş yapmış kullanıcı)
+router.post("/change-password", authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, newEmail } = req.body;
+    const user = await AdminUser.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+    }
+    // Mevcut şifreyi kontrol et
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Mevcut şifre hatalı" });
+    }
+    // E-posta değişikliği
+    if (newEmail && newEmail !== user.email) {
+      const existing = await AdminUser.findOne({ email: newEmail });
+      if (existing) {
+        return res.status(400).json({ error: "Bu e-posta zaten kullanılıyor" });
+      }
+      user.email = newEmail;
+    }
+    // Şifre değişikliği
+    if (newPassword) {
+      user.password = newPassword;
+    }
+    await user.save();
+    res.json({
+      success: true,
+      message: "Bilgiler başarıyla güncellendi",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Change password/email error:", error);
+    res.status(500).json({ error: "Bilgiler güncellenemedi" });
+  }
+});
+
+// Chat asistanı endpointi (Gemini API ile)
+router.post("/chat/assist", async (req, res) => {
+  const { message } = req.body;
+  if (!message || typeof message !== "string") {
+    return res.status(400).json({ error: "Mesaj gerekli" });
+  }
+  try {
+    // Tüm hastalıkları çek
+    const diseases = await Disease.find({}, { name: 1, description: 1 });
+    const diseaseList = diseases
+      .map((d) => `- ${d.name}: ${d.description || ""}`)
+      .join("\n");
+    const prompt = `Kullanıcıdan gelen mesaj: \"${message}\".\nAşağıda sistemdeki hastalıklar ve açıklamaları var:\n${diseaseList}\nKullanıcıya en uygun hastalığı ve kısa açıklamasını öner. Eğer sistemdeki bir hastalıkla eşleşiyorsa, sadece o hastalığın adını ve kısa açıklamasını JSON olarak döndür.\nYanıt örneği: { \"disease\": \"Adet Düzensizliği\", \"description\": \"Adet döngüsünde bozukluk...\" }\nEğer hiçbir hastalıkla eşleşmiyorsa, sadece { \"disease\": null } döndür.`;
+    const geminiRes = await axios.post(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" +
+        process.env.GEMINI_API_KEY,
+      {
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+      }
+    );
+    const geminiText =
+      geminiRes.data.candidates?.[0]?.content?.parts?.[0]?.text;
+    console.log("Gemini yanıtı:", geminiText);
+    let suggestion = null;
+    let link = null;
+    if (geminiText) {
+      try {
+        const parsed = JSON.parse(geminiText);
+        if (parsed.disease) {
+          const fuse = new Fuse(diseases, {
+            keys: ["name", "keywords"],
+            threshold: 0.5,
+          });
+          const results = fuse.search(parsed.disease);
+          let matched = null;
+          if (results.length > 0) {
+            matched = results[0].item;
+            // Otomatik keywords ekleme
+            if (
+              parsed.disease &&
+              matched.keywords &&
+              !matched.keywords
+                .map((k) => k.toLowerCase())
+                .includes(parsed.disease.toLowerCase())
+            ) {
+              matched.keywords.push(parsed.disease);
+              // DB'de de güncelle
+              await matched.save();
+            }
+          } else {
+            matched = diseases[0];
+          }
+          suggestion = `${matched.name} ile ilgili bitkileri görmek için tıklayın.`;
+          link = `/diseases/${matched._id}`;
+        }
+      } catch (e) {
+        // JSON parse edilemezse düz metinden hastalık adını ve açıklamasını çek
+        const match = geminiText.match(
+          /([A-Za-zÇçĞğİıÖöŞşÜü\s]+)[:\-–—]+(.+)/i
+        );
+        if (match && match[1]) {
+          const diseaseName = match[1].trim();
+          const fuse = new Fuse(diseases, {
+            keys: ["name", "keywords"],
+            threshold: 0.5,
+          });
+          const results = fuse.search(diseaseName);
+          let matched = null;
+          if (results.length > 0) {
+            matched = results[0].item;
+            // Otomatik keywords ekleme
+            if (
+              diseaseName &&
+              matched.keywords &&
+              !matched.keywords
+                .map((k) => k.toLowerCase())
+                .includes(diseaseName.toLowerCase())
+            ) {
+              matched.keywords.push(diseaseName);
+              // DB'de de güncelle
+              await matched.save();
+            }
+          } else {
+            matched = diseases[0];
+          }
+          suggestion = `${matched.name} ile ilgili bitkileri görmek için tıklayın.`;
+          link = `/diseases/${matched._id}`;
+        }
+      }
+    }
+    return res.json({ suggestion, link });
+  } catch (err) {
+    console.error("Gemini API hatası:", err?.response?.data || err.message);
+    return res.json({ suggestion: null });
   }
 });
 

@@ -16,6 +16,11 @@ const diseaseSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    keywords: {
+      type: [String],
+      default: [],
+      description: "Anahtar kelime ve eşanlamlılar için.",
+    },
   },
   {
     timestamps: true,

@@ -75,7 +75,7 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Fixed Sidebar */}
-      <div className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen flex-shrink-0">
+      <div className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen flex-shrink-0 fixed top-0 left-0 h-screen z-30">
         <div className="p-6">
           <div className="flex items-center space-x-2">
             <div className="p-2 bg-primary-100 rounded-lg">
@@ -123,9 +123,6 @@ export const AdminLayout: React.FC = () => {
                 <Users className="h-4 w-4 text-primary-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">
-                  {user?.email}
-                </p>
                 <p className="text-xs text-gray-500">Admin</p>
               </div>
             </div>
@@ -147,7 +144,7 @@ export const AdminLayout: React.FC = () => {
       </div>
 
       {/* Scrollable Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 ml-64">
         <main className="p-8">
           <Outlet />
         </main>

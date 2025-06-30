@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Leaf, Search, BookOpen, ArrowRight, Shield } from "lucide-react";
+import {
+  Leaf,
+  Search,
+  BookOpen,
+  ArrowRight,
+  Shield,
+  Activity,
+} from "lucide-react";
 
 import { getStats } from "../services/plantService";
 
@@ -79,7 +86,7 @@ export const Home: React.FC = () => {
                 to="/diseases"
                 className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-full border border-gray-200 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center space-x-2"
               >
-                <Search className="h-5 w-5 text-secondary-600" />
+                <Activity className="h-5 w-5 text-rose-500" />
                 <span>Hastalıklar</span>
               </Link>
             </div>
@@ -158,7 +165,7 @@ export const Home: React.FC = () => {
                 className="border-2 border-white hover:bg-white hover:text-primary-600 text-white px-8 py-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
               >
                 <span>Hastalık Ara</span>
-                <Search className="h-5 w-5" />
+                <Activity className="h-5 w-5 text-rose-500" />
               </Link>
             </div>
           </div>

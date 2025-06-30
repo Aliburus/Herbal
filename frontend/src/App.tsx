@@ -20,8 +20,11 @@ import { AdminRecipes } from "./pages/admin/AdminRecipes";
 import { AdminRecipeCreate } from "./pages/admin/AdminRecipeCreate";
 import { AdminRecipeEdit } from "./pages/admin/AdminRecipeEdit";
 import { AdminRelations } from "./pages/admin/AdminRelations";
+import AdminUsers from "./pages/admin/AdminUsers";
 import { Diseases } from "./pages/Diseases";
 import { DiseaseDetail } from "./pages/DiseaseDetail";
+import AdminSettings from "./pages/admin/AdminSettings";
+import { ChatWidget } from "./components/Common/ChatWidget";
 
 function App() {
   return (
@@ -41,8 +44,8 @@ function App() {
             <Route path="recipes/new" element={<AdminRecipeCreate />} />
             <Route path="recipes/edit/:id" element={<AdminRecipeEdit />} />
             <Route path="relations" element={<AdminRelations />} />
-            <Route path="users" element={<div>Kullanıcılar (Yakında)</div>} />
-            <Route path="settings" element={<div>Ayarlar (Yakında)</div>} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* Auth Routes */}
@@ -79,6 +82,7 @@ function App() {
             }
           />
         </Routes>
+        <ChatWidget />
       </div>
     </Router>
   );

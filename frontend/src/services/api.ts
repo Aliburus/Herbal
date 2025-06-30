@@ -14,3 +14,6 @@ const api = axios.create({
 });
 
 export default api;
+
+export const chatAssist = (message: string) =>
+  api.post("/api/auth/chat/assist", { message });

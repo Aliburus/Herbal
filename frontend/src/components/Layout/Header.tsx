@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   ChevronDown,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -76,7 +77,7 @@ export const Header: React.FC = () => {
                 "/diseases"
               )}`}
             >
-              <Search className="h-4 w-4" />
+              <Activity className="h-4 w-4 text-rose-500" />
               <span>Hastalıklar</span>
             </Link>
             {isAdmin && (
@@ -102,7 +103,7 @@ export const Header: React.FC = () => {
                 >
                   <Users className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-700 font-medium">
-                    {user.name || user.email}
+                    {user.name || "Kullanıcı"}
                   </span>
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
